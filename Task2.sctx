@@ -1,0 +1,243 @@
+scchart VersionA_Task2 {
+
+
+  input bool NSraised
+  input bool EWraised
+  
+  clock timer = 0
+  clock NS_ped_timer = 0
+  clock EW_ped_timer = 0
+
+
+  output int NS_red = 0
+  output int NS_yellow = 0
+  output int NS_green = 0
+
+  output int EW_red = 0
+  output int EW_yellow = 0
+  output int EW_green = 0
+
+  output int NS_ped_red = 0
+  output int NS_ped_green = 0
+  output int EW_ped_red = 0
+  output int EW_ped_green = 0
+
+  bool NS_request = false
+  bool EW_request = false
+
+  const int t1 = 5000
+  const int t2 = 2000
+  const int t3 = 1000
+  const int t4 = 5000
+  const int t5 = 2000
+  const int t6 = 1000
+
+  const int ped_time = 4000
+
+
+  region {
+
+
+    initial state NS_Green {
+
+      entry do NS_red = 0
+      entry do NS_yellow = 0
+      entry do NS_green = 1
+
+      entry do EW_red = 1
+      entry do EW_yellow = 0
+      entry do EW_green = 0
+
+      entry do NS_ped_red = 1
+      entry do NS_ped_green = 0
+      entry do EW_ped_red = 1
+      entry do EW_ped_green = 0
+    }
+
+    immediate if timer >= t1 do 
+      timer = 0
+      go to NS_Yellow
+
+
+    state NS_Yellow {
+
+      entry do NS_red = 0
+      entry do NS_yellow = 1
+      entry do NS_green = 0
+
+      entry do EW_red = 1
+      entry do EW_yellow = 0
+      entry do EW_green = 0
+
+      entry do NS_ped_red = 1
+      entry do NS_ped_green = 0
+      entry do EW_ped_red = 1
+      entry do EW_ped_green = 0
+    }
+
+    immediate if timer >= t2 do timer = 0 go to All_Red
+
+
+    state All_Red {
+
+      entry do NS_red = 1
+      entry do NS_yellow = 0
+      entry do NS_green = 0
+
+      entry do EW_red = 1
+      entry do EW_yellow = 0
+      entry do EW_green = 0
+
+      entry do NS_ped_red = 1
+      entry do NS_ped_green = 0
+      entry do EW_ped_red = 1
+      entry do EW_ped_green = 0
+    }
+    
+    if NS_request do NS_ped_timer = 0 go to NS_Green_Ped
+    if timer >= t3 && !NS_request do timer = 0 go to EW_Green
+    
+    state NS_Green_Ped {
+
+      entry do NS_red = 1
+      entry do NS_yellow = 0
+      entry do NS_green = 0
+
+      entry do EW_red = 1
+      entry do EW_yellow = 0
+      entry do EW_green = 0
+
+      entry do NS_ped_red = 0
+      entry do NS_ped_green = 1
+      entry do EW_ped_red = 1
+      entry do EW_ped_green = 0
+    }
+    
+    if NS_ped_timer >= ped_time do
+          NS_ped_timer = 0
+          NS_request = false
+          go to EW_Green
+    
+    
+    state EW_Green {
+
+      entry do NS_red = 1
+      entry do NS_yellow = 0
+      entry do NS_green = 0
+
+      entry do EW_red = 0
+      entry do EW_yellow = 0
+      entry do EW_green = 1
+
+      entry do NS_ped_red = 1
+      entry do NS_ped_green = 0
+      entry do EW_ped_red = 1
+      entry do EW_ped_green = 0
+    }
+
+    immediate if timer >= t4 do 
+        timer = 0 
+        go to EW_Yellow
+
+
+    state EW_Yellow {
+
+      entry do NS_red = 1
+      entry do NS_yellow = 0
+      entry do NS_green = 0
+
+      entry do EW_red = 0
+      entry do EW_yellow = 1
+      entry do EW_green = 0
+
+      entry do NS_ped_red = 1
+      entry do NS_ped_green = 0
+      entry do EW_ped_red = 1
+      entry do EW_ped_green = 0
+    }
+
+    immediate if timer >= t5 do timer = 0 go to All_Red_2
+
+
+    state All_Red_2 {
+
+      entry do NS_red = 1
+      entry do NS_yellow = 0
+      entry do NS_green = 0
+
+      entry do EW_red = 1
+      entry do EW_yellow = 0
+      entry do EW_green = 0
+
+      entry do NS_ped_red = 0
+      entry do NS_ped_green = 0
+      entry do EW_ped_red = 0
+      entry do EW_ped_green = 0
+    }
+    
+    if EW_request do EW_ped_timer = 0 go to EW_Green_Ped
+    if timer >= t6 && !EW_request do timer = 0 go to NS_Green
+    
+    state EW_Green_Ped {
+
+      entry do NS_red = 1
+      entry do NS_yellow = 0
+      entry do NS_green = 0
+
+      entry do EW_red = 1
+      entry do EW_yellow = 0
+      entry do EW_green = 0
+
+      entry do NS_ped_red = 1
+      entry do NS_ped_green = 0
+      entry do EW_ped_red = 0
+      entry do EW_ped_green = 1
+    }
+    
+    if EW_ped_timer >= ped_time do
+          EW_ped_timer = 0
+          EW_request = false
+          go to NS_Green
+  }
+
+  // NS pedestrian request
+
+region {
+
+    initial state NS_idle {
+
+        entry do NS_request = false
+    }
+
+    if NSraised go to NS_waiting
+
+    state NS_waiting {
+
+        entry do NS_request = true
+    }
+
+
+    if !NSraised go to NS_idle
+}
+
+  // EW pedestrian request
+// EW pedestrian request
+
+region {
+
+    initial state EW_idle {
+
+        entry do EW_request = false
+    }
+
+    if EWraised go to EW_waiting
+
+    state EW_waiting {
+
+        entry do EW_request = true
+    }
+
+
+    if !EWraised  go to EW_idle
+  
+  }
