@@ -4,7 +4,6 @@
 #include <sys/alt_irq.h>
 #include <altera_avalon_timer_regs.h>
 #include <altera_avalon_pio_regs.h>
-
 #include "sccharts.h"
 
 /* Use Timer 1 so we do not interfere with the HAL system timer. */
@@ -14,12 +13,19 @@
 #define NS_BUTTON_MASK 0x04u  /* KEY2 */
 #define EW_BUTTON_MASK 0x02u  /* KEY1 */
 
+
 /* Timer 1 is configured for a 1 ms period at 50 MHz. */
 #define TIMER_PERIOD_COUNTS 50000u
 
 static volatile uint32_t pending_ticks = 0;
 static uint8_t ns_press_pending = 0;
 static uint8_t ew_press_pending = 0;
+static const char config_packet[] =
+	"1000,500,200,1000,500,200\r\n";
+
+static uint32_t config_index = 0;
+static uint8_t config_requested = 0;
+static uint8_t previous_key0 = 1;
 
 /*
  * Timer interrupt service routine.
@@ -98,6 +104,9 @@ int main(void)
     data.tick = 0;
     data.NSraised = 0;
     data.EWraised = 0;
+    data.rx_available = 0;
+    data.rx_char = 0;
+
 
     tick(&data);
     update_leds(&data);
@@ -154,6 +163,14 @@ int main(void)
         /* Read the physical buttons. */
         keys = IORD_ALTERA_AVALON_PIO_DATA(KEYS_BASE);
 
+        if (((keys & 0x01u) == 0u) &&
+            ((previous_keys & 0x01u) != 0u) &&
+            !config_requested)
+        {
+            config_requested = 1;
+            config_index = 0;
+        }
+
         /* Remember each new active-low button press. */
         if (((keys & NS_BUTTON_MASK) == 0u) &&
             ((previous_keys & NS_BUTTON_MASK) != 0u))
@@ -182,22 +199,44 @@ int main(void)
 
         if (process_tick)
         {
-            /* Deliver any remembered button press to the chart. */
-            data.NSraised = ns_press_pending;
-            data.EWraised = ew_press_pending;
-            data.tick = 1;
 
-            tick(&data);
+        	/* Send one configuration character per chart tick. */
+        	if (config_requested &&
+        	    config_packet[config_index] != '\0')
+        	{
+        	    data.rx_char =
+        	        (unsigned char)config_packet[config_index];
 
-            /* Clear input pulses after the chart has processed them. */
-            data.tick = 0;
-            data.NSraised = 0;
-            data.EWraised = 0;
+        	    config_index++;
+        	    data.rx_available = 1;
+        	}
+        	else
+        	{
+        	    data.rx_available = 0;
 
-            ns_press_pending = 0;
-            ew_press_pending = 0;
+        	    if (config_requested)
+        	    {
+        	        config_requested = 0;
+        	        config_index = 0;
+        	    }
+        	}
 
-            update_leds(&data);
+        	/* Deliver button presses and the received character. */
+        	data.NSraised = ns_press_pending;
+        	data.EWraised = ew_press_pending;
+        	data.tick = 1;
+
+        	tick(&data);
+
+        	/* Clear one-tick input pulses. */
+        	data.tick = 0;
+        	data.NSraised = 0;
+        	data.EWraised = 0;
+
+        	ns_press_pending = 0;
+        	ew_press_pending = 0;
+
+        	update_leds(&data);
         }
     }
 
