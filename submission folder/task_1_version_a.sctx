@@ -1,0 +1,138 @@
+ scchart VersionA {
+
+  region{
+    
+    clock NS = 0 
+    
+    output int NS_red = 0
+    output int NS_yellow = 0
+    output int NS_green = 0
+
+    output int EW_red = 0
+    output int EW_yellow = 0
+    output int EW_green = 0
+
+    const int t1 = 5000  // NS green (ms)
+    const int t2 = 2000  // NS yellow
+    const int t3 = 1000  // all-red
+    const int t4 = 5000  // EW green
+    const int t5 = 2000  // EW yellow
+    const int t6 = 1000  // all-red
+    
+    initial state NS_Green {
+     entry do 
+      NS_red = 0
+     entry do
+      NS_yellow = 0
+     entry do
+      NS_green = 1
+     entry do
+      EW_red = 1
+     entry do
+      EW_yellow = 0
+     entry do
+      EW_green = 0
+   
+    }
+    
+    immediate if NS > t1 do NS = 0 go to NS_Yellow
+    
+    state NS_Yellow {
+    entry do
+    NS_red = 0
+    entry do
+    NS_yellow = 1
+    entry do
+    NS_green = 0
+
+    entry do
+    EW_red = 1
+    entry do
+    EW_yellow = 0
+    entry do
+    EW_green = 0
+      
+    }
+    
+    immediate if NS > t2 do NS = 0 go to All_Red
+    
+    state All_Red {
+    
+    entry do
+    NS_red = 1
+    entry do
+    NS_yellow = 0
+    entry do
+    NS_green = 0
+    entry do
+    EW_red = 1
+    entry do
+    EW_yellow = 0
+    entry do
+    EW_green = 0
+      
+    }
+    
+    immediate if NS > t3 do NS = 0 go to EW_Green
+    
+    state EW_Green {
+      
+    entry do
+    NS_red = 1
+    entry do
+    NS_yellow = 0
+    entry do
+    NS_green = 0
+    entry do
+    EW_red = 0
+    entry do
+    EW_yellow = 0
+    entry do
+    EW_green = 1
+      
+    }
+    
+    immediate if NS > t4 do NS = 0 go to EW_Yellow
+    
+    state EW_Yellow {
+      
+    entry do
+    NS_red = 1
+    entry do
+    NS_yellow = 0
+    entry do
+    NS_green = 0
+    entry do
+    EW_red = 0
+    entry do
+    EW_yellow = 1
+    entry do
+    EW_green = 0
+      
+    }
+    
+    immediate if NS > t5 do NS = 0 go to All_Red_2
+    
+    state All_Red_2 {
+    entry do
+    NS_red = 1
+    entry do
+    NS_yellow = 0
+    entry do
+    NS_green = 0
+    
+    entry do
+    EW_red = 1
+    entry do
+    EW_yellow = 0
+    entry do
+    EW_green = 0
+      
+    }
+    
+    if NS > t6 do NS = 0 go to NS_Green
+    
+    
+       
+    }
+  }
