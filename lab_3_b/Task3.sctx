@@ -1,0 +1,424 @@
+scchart VersionA_Task3 {
+
+    input bool NSraised
+    input bool EWraised
+
+    input bool tick = false
+    int elapsed = 0
+
+    output int NS_red = 0
+    output int NS_yellow = 0
+    output int NS_green = 0
+
+    output int EW_red = 0
+    output int EW_yellow = 0
+    output int EW_green = 0
+
+    output int NS_ped_red = 0
+    output int NS_ped_green = 0
+    output int EW_ped_red = 0
+    output int EW_ped_green = 0
+
+    bool NS_request = false
+    bool EW_request = false
+
+    bool NS_done = false
+    bool EW_done = false
+    bool new_packet = true
+
+    int t1 = 5000
+    int t2 = 2000
+    int t3 = 1000
+    int t4 = 5000
+    int t5 = 2000
+    int t6 = 1000
+
+    input bool rx_available
+    input int rx_char
+
+    int digit_count = 0
+    int value_count = 0
+    output int current_value = 0
+
+    int new_t1 = 0
+    int new_t2 = 0
+    int new_t3 = 0
+    int new_t4 = 0
+    int new_t5 = 0
+    int new_t6 = 0
+
+    bool config_ready = false
+    bool config_pending = false
+    output bool packet_error = false
+
+    const int ped_time = 4000
+
+
+    // Main traffic-light controller
+    region {
+
+        initial state NS_Green {
+            entry do elapsed = 0
+
+            entry do NS_red = 0
+            entry do NS_yellow = 0
+            entry do NS_green = 1
+
+            entry do EW_red = 1
+            entry do EW_yellow = 0
+            entry do EW_green = 0
+
+            entry do NS_ped_red = 1
+            entry do NS_ped_green = 0
+            entry do EW_ped_red = 1
+            entry do EW_ped_green = 0
+
+            during if tick do elapsed += 1
+        }
+
+        if EW_done do 
+            EW_done = false
+            go to NS_Green
+        
+
+        if elapsed >= t1 do 
+            elapsed = 0
+            go to NS_Yellow
+        
+
+
+        state NS_Yellow {
+            entry do elapsed = 0
+
+            entry do NS_red = 0
+            entry do NS_yellow = 1
+            entry do NS_green = 0
+
+            entry do EW_red = 1
+            entry do EW_yellow = 0
+            entry do EW_green = 0
+
+            entry do NS_ped_red = 1
+            entry do NS_ped_green = 0
+            entry do EW_ped_red = 1
+            entry do EW_ped_green = 0
+
+            during if tick do elapsed += 1
+        }
+
+        if elapsed >= t2 do 
+            elapsed = 0
+            go to All_Red
+        
+
+
+        state All_Red {
+            entry do elapsed = 0
+
+            entry do NS_red = 1
+            entry do NS_yellow = 0
+            entry do NS_green = 0
+
+            entry do EW_red = 1
+            entry do EW_yellow = 0
+            entry do EW_green = 0
+
+            entry do NS_ped_red = 1
+            entry do NS_ped_green = 0
+            entry do EW_ped_red = 1
+            entry do EW_ped_green = 0
+
+            entry do {
+                if config_pending {
+                    t1 = new_t1;
+                    t2 = new_t2;
+                    t3 = new_t3;
+                    t4 = new_t4;
+                    t5 = new_t5;
+                    t6 = new_t6;
+                    config_pending = false
+                }
+            }
+
+            during if tick do elapsed += 1
+        }
+
+        if NS_request do 
+            elapsed = 0
+            go to NS_Green_Ped
+        
+
+        if elapsed >= t3 && !NS_request do 
+            elapsed = 0
+            go to EW_Green
+        
+
+
+        state NS_Green_Ped {
+            entry do elapsed = 0
+
+            entry do NS_red = 1
+            entry do NS_yellow = 0
+            entry do NS_green = 0
+
+            entry do EW_red = 1
+            entry do EW_yellow = 0
+            entry do EW_green = 0
+
+            entry do NS_ped_red = 0
+            entry do NS_ped_green = 1
+            entry do EW_ped_red = 1
+            entry do EW_ped_green = 0
+
+            during if tick do elapsed += 1
+        }
+
+        if elapsed >= ped_time do 
+            elapsed = 0;
+            NS_done = true
+            go to EW_Green
+        
+
+
+        state EW_Green {
+            entry do elapsed = 0
+
+            entry do NS_red = 1
+            entry do NS_yellow = 0
+            entry do NS_green = 0
+
+            entry do EW_red = 0
+            entry do EW_yellow = 0
+            entry do EW_green = 1
+
+            entry do NS_ped_red = 1
+            entry do NS_ped_green = 0
+            entry do EW_ped_red = 1
+            entry do EW_ped_green = 0
+
+            during if tick do elapsed += 1
+        }
+
+        if NS_done do 
+            NS_done = false
+            go to EW_Green
+        
+
+        if elapsed >= t4 do 
+            elapsed = 0
+            go to EW_Yellow
+        
+
+
+        state EW_Yellow {
+            entry do elapsed = 0
+
+            entry do NS_red = 1
+            entry do NS_yellow = 0
+            entry do NS_green = 0
+
+            entry do EW_red = 0
+            entry do EW_yellow = 1
+            entry do EW_green = 0
+
+            entry do NS_ped_red = 1
+            entry do NS_ped_green = 0
+            entry do EW_ped_red = 1
+            entry do EW_ped_green = 0
+
+            during if tick do elapsed += 1
+        }
+
+        if elapsed >= t5 do 
+            elapsed = 0
+            go to All_Red_2
+        
+
+
+        state All_Red_2 {
+            entry do elapsed = 0
+
+            entry do NS_red = 1
+            entry do NS_yellow = 0
+            entry do NS_green = 0
+
+            entry do EW_red = 1
+            entry do EW_yellow = 0
+            entry do EW_green = 0
+
+            entry do NS_ped_red = 0
+            entry do NS_ped_green = 0
+            entry do EW_ped_red = 0
+            entry do EW_ped_green = 0
+
+            entry do {
+                if config_pending {
+                    t1 = new_t1;
+                    t2 = new_t2;
+                    t3 = new_t3;
+                    t4 = new_t4;
+                    t5 = new_t5;
+                    t6 = new_t6;
+                    config_pending = false
+                }
+            }
+
+            during if tick do elapsed += 1
+        }
+
+        if EW_request do 
+            elapsed = 0
+            go to EW_Green_Ped
+        
+
+        if elapsed >= t6 && !EW_request do 
+            elapsed = 0
+            go to NS_Green
+        
+
+
+        state EW_Green_Ped {
+            entry do elapsed = 0
+
+            entry do NS_red = 1
+            entry do NS_yellow = 0
+            entry do NS_green = 0
+
+            entry do EW_red = 1
+            entry do EW_yellow = 0
+            entry do EW_green = 0
+
+            entry do NS_ped_red = 1
+            entry do NS_ped_green = 0
+            entry do EW_ped_red = 0
+            entry do EW_ped_green = 1
+
+            during if tick do elapsed += 1
+        }
+
+        if elapsed >= ped_time do 
+            elapsed = 0;
+            EW_done = true
+            go to NS_Green
+        
+    }
+
+
+    // NS pedestrian request latch
+    region {
+        initial state NS_idle {
+            entry do NS_request = false
+        }
+
+        if NSraised go to NS_waiting
+
+        state NS_waiting {
+            entry do NS_request = true
+        }
+
+        if NS_done go to NS_idle
+    }
+
+
+    // EW pedestrian request latch
+    region {
+        initial state EW_idle {
+            entry do EW_request = false
+        }
+
+        if EWraised go to EW_waiting
+
+        state EW_waiting {
+            entry do EW_request = true
+        }
+
+        if EW_done go to EW_idle
+    }
+
+
+    // UART configuration packet parser
+    region {
+        initial state Parser_Waiting {
+        }
+
+        if rx_available go to Parser_Reading
+
+        state Parser_Reading {
+            entry do {
+                if (new_packet) {
+                    new_packet = false;
+                    packet_error = false;
+                    config_pending = false;
+                    config_ready = false;
+                }
+
+                if (rx_char >= 48 && rx_char <= 57) {
+                    if (digit_count < 4) {
+                        current_value *= 10;
+                        current_value += (rx_char - 48);
+                        digit_count += 1;
+                    } else {
+                        packet_error = true;
+                    }
+                }
+
+                if (rx_char == 44) {
+                    if (digit_count >= 1 && digit_count <= 4
+                        && !packet_error && value_count < 5) {
+
+                        if (value_count == 0) {
+                            new_t1 = current_value;
+                        }
+
+                        if (value_count == 1) {
+                            new_t2 = current_value;
+                        }
+
+                        if (value_count == 2) {
+                            new_t3 = current_value;
+                        }
+
+                        if (value_count == 3) {
+                            new_t4 = current_value;
+                        }
+
+                        if (value_count == 4) {
+                            new_t5 = current_value;
+                        }
+
+                        value_count += 1;
+                        current_value = 0;
+                        digit_count = 0;
+                    } else {
+                        packet_error = true;
+                    }
+                }
+
+                if (rx_char == 13) {
+                    // Ignore carriage return.
+                }
+
+                if (rx_char == 10) {
+                    if (value_count == 5
+                        && digit_count >= 1
+                        && digit_count <= 4
+                        && !packet_error) {
+
+                        new_t6 = current_value;
+                        config_ready = true;
+                        config_pending = true;
+                    } else {
+                        packet_error = true;
+                    }
+
+                    current_value = 0;
+                    digit_count = 0;
+                    value_count = 0;
+                    new_packet = true;
+                }
+            }
+        }
+
+        if !rx_available go to Parser_Waiting
+    }
+}

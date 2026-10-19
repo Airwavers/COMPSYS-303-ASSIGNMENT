@@ -1,0 +1,126 @@
+scchart VersionB_Task1 {
+
+  input bool tick = false
+
+  output int NS_red = 0
+  output int NS_yellow = 0
+  output int NS_green = 0
+
+  output int EW_red = 0
+  output int EW_yellow = 0
+  output int EW_green = 0
+
+  const int t1 = 5000
+  const int t2 = 2000
+  const int t3 = 1000
+  const int t4 = 5000
+  const int t5 = 2000
+  const int t6 = 1000
+
+  int elapsed = 0;
+
+
+  region {
+
+    initial state NS_Green {
+      entry do elapsed = 0
+      entry do NS_red = 0
+      entry do NS_yellow = 0
+      entry do NS_green = 1
+
+      entry do EW_red = 1
+      entry do EW_yellow = 0
+      entry do EW_green = 0
+    }
+
+    if elapsed >= t1 do
+      elapsed = 0
+      go to NS_Yellow
+
+
+    state NS_Yellow {
+      entry do elapsed = 0
+      entry do NS_red = 0
+      entry do NS_yellow = 1
+      entry do NS_green = 0
+
+      entry do EW_red = 1
+      entry do EW_yellow = 0
+      entry do EW_green = 0
+
+      during if tick do elapsed = elapsed + 1
+    }
+
+    if elapsed >= t2 do elapsed = 0 go to All_Red
+
+
+    state All_Red {
+      entry do elapsed = 0
+      entry do NS_red = 1
+      entry do NS_yellow = 0
+      entry do NS_green = 0
+
+      entry do EW_red = 1
+      entry do EW_yellow = 0
+      entry do EW_green = 0
+
+      during if tick do elapsed = elapsed + 1
+    }
+
+    if elapsed >= t3 && !NS_request do elapsed = 0 go to EW_Green
+
+
+    state EW_Green {
+      entry do elapsed = 0
+      entry do NS_red = 1
+      entry do NS_yellow = 0
+      entry do NS_green = 0
+
+      entry do EW_red = 0
+      entry do EW_yellow = 0
+      entry do EW_green = 1
+
+      during if tick do elapsed = elapsed + 1
+    }
+
+    if elapsed >= t4 do
+        elapsed = 0
+        go to EW_Yellow
+
+
+    state EW_Yellow {
+      entry do elapsed = 0
+      entry do NS_red = 1
+      entry do NS_yellow = 0
+      entry do NS_green = 0
+
+      entry do EW_red = 0
+      entry do EW_yellow = 1
+      entry do EW_green = 0
+
+      entry do NS_ped_red = 1
+      entry do NS_ped_green = 0
+      entry do EW_ped_red = 1
+      entry do EW_ped_green = 0
+      during if tick do elapsed = elapsed + 1
+    }
+
+    if elapsed >= t5 do elapsed = 0 go to All_Red_2
+
+
+    state All_Red_2 {
+      entry do elapsed = 0
+      entry do NS_red = 1
+      entry do NS_yellow = 0
+      entry do NS_green = 0
+
+      entry do EW_red = 1
+      entry do EW_yellow = 0
+      entry do EW_green = 0
+
+      during if tick do elapsed = elapsed + 1
+    }
+
+    if elapsed >= t6 && !EW_request do elapsed = 0 go to NS_Green
+
+}
